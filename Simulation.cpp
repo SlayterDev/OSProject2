@@ -24,6 +24,8 @@ typedef struct {
 process processes[50];
 CPU cpus[5];
 unsigned long maxBurst; // Longest burst time of all processes
+double firstRun;
+double secondRun;
 
 // Get the longest process
 void setMaxBurst() {
@@ -43,7 +45,7 @@ void generateProcesses() {
 	for (i = 0; i < 50; i++) {
 		process p;
 		p.memory = (random() % 2621440); // 0 - 2.5MB
-		p.burst = (random() % 4000);
+		p.burst = (random() % (400000 - 10000)) + 1000;
 		processes[i] = p;
 	}
 	setMaxBurst();
@@ -52,8 +54,8 @@ void generateProcesses() {
 // Create one random process
 process getNewProcess() {
 	process p;
-	p.memory = (random() % (8388608 - 250)) + 250; // .25MB - 8GB
-	p.burst = (random() % (long)((50*pow(10,12)) - (10*pow(10,6)))) + (10*pow(10,6));
+	p.memory = (random() % 2621440); // .25MB - 8GB
+	p.burst = (random() % (400000 - 10000)) + 1000;
 	return p;
 }
 
@@ -133,9 +135,9 @@ void prob1() {
 	int baseP = 0;
 	do {
 		if (runtime % 50 == 0 && i < 50) {
-			process p = getNewProcess();
+			process p = processes[i];
 			if (p.block = malloc(p.memory)) {
-				printf("New Process\n");
+				//printf("New Process with burst: %llu\n", p.burst);
 				readyQueue[rp] = p;
 				rp++;
 			}
@@ -149,7 +151,7 @@ void prob1() {
 		if (curProcess.burst == runtime) {
 			runtime = 0;
 			baseP++;
-			printf("Process done\n");
+			//printf("Process done\n");
 
 			if (baseP == 50)
 				break;
@@ -164,6 +166,7 @@ void prob1() {
 
 	double elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0;      // sec to ms
     elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0;   // us to ms
+    firstRun = elapsedTime;
     printf("elapsedTime: %fms\n", elapsedTime);
 }
 
@@ -183,9 +186,9 @@ void prob2() {
 	int baseP = 0;
 	do {
 		if (runtime % 50 == 0 && i < 50) {
-			process p = getNewProcess();
+			process p = processes[i];
 			if (p.block = myMalloc(p.memory)) {
-				printf("New Process\n");
+				//printf("New Process with burst: %llu\n", p.burst);
 				readyQueue[rp] = p;
 				rp++;
 			}
@@ -199,7 +202,7 @@ void prob2() {
 		if (curProcess.burst == runtime) {
 			runtime = 0;
 			baseP++;
-			printf("Process done\n");
+			//printf("Process done\n");
 
 			if (baseP == 50)
 				break;
@@ -214,6 +217,7 @@ void prob2() {
 
 	double elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0;      // sec to ms
     elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0;   // us to ms
+    secondRun = elapsedTime;
     printf("elapsedTime: %fms\n", elapsedTime);
 }
 
@@ -221,7 +225,11 @@ int main(int argc, char const *argv[]) {
 	srand(time(NULL));
 
 	generateProcesses();
-	//prob1();
+	prob1();
 	prob2();
+
+	double delta = firstRun - secondRun;
+	printf("The delta between the custom allocator\nand system calls is %fms\n", delta);
+
 	return 0;
 }
