@@ -12,32 +12,10 @@ typedef struct {
 	void *block;
 } process;
 
-// Define a CPU
-typedef struct {
-	unsigned long speed;
-	unsigned int memory;
-	process queue[50];
-	int procCount;
-} CPU;
-
 // Global variables for simulation
-process processes[50];
-CPU cpus[5];
-unsigned long maxBurst; // Longest burst time of all processes
-double firstRun;
-double secondRun;
-
-// Get the longest process
-void setMaxBurst() {
-	unsigned long max = 0;
-	int i;
-	for (i = 0; i < 50; i++) {
-		if (processes[i].burst > max)
-			max = processes[i].burst;
-	}
-
-	maxBurst = max;
-}
+process processes[50]; // List of processes
+double firstRun;	   // Runtime for malloc() and free()
+double secondRun;	   // Runtime for myMalloc() and myFree()
 
 // Generate 50 "random" processes
 void generateProcesses() {
@@ -45,100 +23,36 @@ void generateProcesses() {
 	for (i = 0; i < 50; i++) {
 		process p;
 		p.memory = (random() % 2621440); // 0 - 2.5MB
-		p.burst = (random() % (400000 - 10000)) + 1000;
-		processes[i] = p;
-	}
-	setMaxBurst();
+		p.burst = (random() % (400000 - 10000)) + 1000; // Shorter bursts so we don't
+		processes[i] = p;								// have to wait ages for the
+	}													// simulation
 }
 
 // Create one random process
 process getNewProcess() {
 	process p;
-	p.memory = (random() % 2621440); // .25MB - 8GB
+	p.memory = (random() % 2621440); // 0 - 2.5MB
 	p.burst = (random() % (400000 - 10000)) + 1000;
 	return p;
 }
 
-// Reorder queue using selection sort
-void reorderQueue(process *queue, int length) {
-	int i,j,iMin;
-
-	for (i = 0; i < length-1; i++) {
-		iMin = i;
-		for (j = i+1; j < length; j++) {
-			if (queue[j].burst < queue[iMin].burst) {
-				iMin = j;
-			}
-		}
-
-		if (iMin != i) {
-			process temp = queue[i];
-			queue[i] = queue[iMin];
-			queue[iMin] = temp;
-		}
-	}
-}
-
-// Return the CPU with the longest time
-unsigned long long getTurnaroundTime() {
-	unsigned long long turnaround = 0, sum = 0;
-	int i, j;
-	for (i = 0; i < 5; i++) {
-		sum = 0;
-		for (j = 0; j < cpus[i].procCount; j++) {
-			sum += cpus[i].queue[j].burst;
-		}
-		if (sum > turnaround)
-			turnaround = sum;
-	}
-
-	return turnaround;
-}
-
-// Return the turnaround time for the specified CPU
-unsigned long long turnaroundTimeForCpu(int cpu) {
-	unsigned long long sum = 0;
-	int i;
-	for (i = 0; i < cpus[cpu].procCount; i++) {
-		sum += cpus[cpu].queue[i].burst;
-	}
-
-	return sum;
-}
-
-// Gets the CPU with the shortest turnaround time by cycles
-// Only useful if all CPU's are the same speed
-int getShortestQueueByTime() {
-	unsigned long long sum = 0;
-	int i, min = 0;
-	for (i = 0; i < 5; i++) {
-		if (turnaroundTimeForCpu(i) < turnaroundTimeForCpu(min))
-			min = i;
-	}
-
-	return min;
-}
-
 void prob1() {
-	process waitQueue[50];
-	int wp = 0;
-	process readyQueue[50];
-	int rp = 0;
+	process readyQueue[50]; // Processes with memory, ready to run
+	int rp = 0;				// Pointer to top of ready queue
 
-	timeval t1, t2;
+	timeval t1, t2; // For time measurment
 
-	gettimeofday(&t1, NULL);
+	gettimeofday(&t1, NULL); // Start the clock
 
 	int i = 0;
 	unsigned long long runtime = 0;
-	process curProcess;
-	int baseP = 0;
+	process curProcess; // Current running process
+	int baseP = 0;		// Keep track of which process is next
 	do {
 		if (runtime % 50 == 0 && i < 50) {
 			process p = processes[i];
-			if (p.block = malloc(p.memory)) {
-				//printf("New Process with burst: %llu\n", p.burst);
-				readyQueue[rp] = p;
+			if (p.block = malloc(p.memory)) { // Try to allocate memory
+				readyQueue[rp] = p;			  // Place it on the ready queue
 				rp++;
 			}
 
@@ -148,48 +62,44 @@ void prob1() {
 			i++;
 		}
 
-		if (curProcess.burst == runtime) {
+		if (curProcess.burst == runtime) { // Process has finished
 			runtime = 0;
 			baseP++;
-			//printf("Process done\n");
 
-			if (baseP == 50)
-				break;
+			if (baseP == 50) // No more processes
+				break;		 // we're done
 
-			curProcess = readyQueue[baseP];
-			free(curProcess.block);
+			free(curProcess.block); 		// Free the memory
+			curProcess = readyQueue[baseP]; // Get the next process
 		}
 		runtime++;
 	} while (1);
 
-	gettimeofday(&t2, NULL);
+	gettimeofday(&t2, NULL); // Stop the clock
 
-	double elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0;      // sec to ms
-    elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0;   // us to ms
+	double elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0; // Calculate time
+    elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0;
     firstRun = elapsedTime;
     printf("elapsedTime: %fms\n", elapsedTime);
 }
 
 void prob2() {
-	process waitQueue[50];
-	int wp = 0;
-	process readyQueue[50];
-	int rp = 0;
+	process readyQueue[50]; // Processes with memory, ready to run
+	int rp = 0;				// Pointer to top of ready queue
 
-	timeval t1, t2;
+	timeval t1, t2; // For time measurment
 
-	gettimeofday(&t1, NULL);
+	gettimeofday(&t1, NULL); // Start the clock
 
 	int i = 0;
 	unsigned long long runtime = 0;
-	process curProcess;
-	int baseP = 0;
+	process curProcess; // Current running process
+	int baseP = 0;		// Keep track of which process is next
 	do {
 		if (runtime % 50 == 0 && i < 50) {
 			process p = processes[i];
-			if (p.block = myMalloc(p.memory)) {
-				//printf("New Process with burst: %llu\n", p.burst);
-				readyQueue[rp] = p;
+			if (p.block = myMalloc(p.memory)) { // Try to allocate memory
+				readyQueue[rp] = p;			    // Place it on the ready queue
 				rp++;
 			}
 
@@ -199,24 +109,23 @@ void prob2() {
 			i++;
 		}
 
-		if (curProcess.burst == runtime) {
+		if (curProcess.burst == runtime) { // Process has finished
 			runtime = 0;
 			baseP++;
-			//printf("Process done\n");
+			
+			if (baseP == 50) // No more processes
+				break;		 // we're done
 
-			if (baseP == 50)
-				break;
-
-			curProcess = readyQueue[baseP];
-			myFree(curProcess.block);
+			myFree(curProcess.block); 		// Free the memory
+			curProcess = readyQueue[baseP]; // Get the next process
 		}
 		runtime++;
 	} while (1);
 
-	gettimeofday(&t2, NULL);
+	gettimeofday(&t2, NULL); // Stop the clock
 
-	double elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0;      // sec to ms
-    elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0;   // us to ms
+	double elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0; // Calculate time
+    elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0;
     secondRun = elapsedTime;
     printf("elapsedTime: %fms\n", elapsedTime);
 }
@@ -228,7 +137,7 @@ int main(int argc, char const *argv[]) {
 	prob1();
 	prob2();
 
-	double delta = firstRun - secondRun;
+	double delta = firstRun - secondRun; // Calculate the difference
 	printf("The delta between the custom allocator\nand system calls is %fms\n", delta);
 
 	return 0;

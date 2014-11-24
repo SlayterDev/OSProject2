@@ -1,4 +1,5 @@
 #include <unistd.h>
+#include <stdlib.h>
 #include "blk.h"
 
 #define NALLOC 	  4096 // Minimum # of bytes to request from the phys manager
@@ -43,7 +44,7 @@ static Header *morecore(unsigned int nu) {
 	if (nu < NALLOC)
 		nu = NALLOC;
 
-	cp = (char *)sbrk(nu * sizeof(Header)); // Grab moar memory
+	cp = (char *)malloc(10485760); // Grab moar memory
 	if (cp == (char *)-1) // No memory left
 		return NULL;
 
