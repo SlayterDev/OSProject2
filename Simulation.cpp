@@ -64,12 +64,12 @@ void prob1() {
 
 		if (curProcess.burst == runtime) { // Process has finished
 			runtime = 0;
+			free(curProcess.block); // Free the memory
 			baseP++;
 
 			if (baseP == 50) // No more processes
 				break;		 // we're done
 
-			free(curProcess.block); 		// Free the memory
 			curProcess = readyQueue[baseP]; // Get the next process
 		}
 		runtime++;
@@ -80,7 +80,7 @@ void prob1() {
 	double elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0; // Calculate time
     elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0;
     firstRun = elapsedTime;
-    printf("elapsedTime: %fms\n", elapsedTime);
+    printf("System Call Elapsed Time: %fms\n", elapsedTime);
 }
 
 void prob2() {
@@ -111,12 +111,12 @@ void prob2() {
 
 		if (curProcess.burst == runtime) { // Process has finished
 			runtime = 0;
+			myFree(curProcess.block); // Free the memory
 			baseP++;
 			
 			if (baseP == 50) // No more processes
 				break;		 // we're done
 
-			myFree(curProcess.block); 		// Free the memory
 			curProcess = readyQueue[baseP]; // Get the next process
 		}
 		runtime++;
@@ -127,7 +127,7 @@ void prob2() {
 	double elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0; // Calculate time
     elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0;
     secondRun = elapsedTime;
-    printf("elapsedTime: %fms\n", elapsedTime);
+    printf("myMalloc() Elapsed Time: %fms\n", elapsedTime);
 }
 
 int main(int argc, char const *argv[]) {

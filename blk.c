@@ -1,8 +1,9 @@
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "blk.h"
 
-#define NALLOC 	  4096 // Minimum # of bytes to request from the phys manager
+#define NALLOC 	  10485760 // Minimum # of bytes to request from the phys manager
 #define PAGE_SIZE 4096 // In other words, a page
 
 #define MEM_DEBUG 0
@@ -44,7 +45,7 @@ static Header *morecore(unsigned int nu) {
 	if (nu < NALLOC)
 		nu = NALLOC;
 
-	cp = (char *)malloc(10485760); // Grab moar memory
+	cp = (char *)malloc(nu*sizeof(Header)); // Grab moar memory
 	if (cp == (char *)-1) // No memory left
 		return NULL;
 
